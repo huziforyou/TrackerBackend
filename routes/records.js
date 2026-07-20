@@ -8,20 +8,18 @@ router.post('/', async (req, res) => {
     
     const { location, browserInfo, selfie } = req.body;
     
-    // Validate required fields
-    if (!location || !location.latitude || !location.longitude) {
-      return res.status(400).json({ message: 'Location is required with latitude and longitude' });
-    }
+    // Use default location if not provided
+    const recordLocation = {
+      latitude: Number(location?.latitude || 0),
+      longitude: Number(location?.longitude || 0)
+    };
     
     const selfieValue = selfie || 'placeholder.jpg';
     
     const record = new Record({
       selfie: selfieValue,
-      location: {
-        latitude: Number(location.latitude),
-        longitude: Number(location.longitude)
-      },
-      browserInfo: browserInfo
+      location: recordLocation,
+      browserInfo: browserInfo || {}
     });
     
     console.log('Saving record:', record);
