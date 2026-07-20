@@ -1,12 +1,18 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const { put } = require('@vercel/blob');
 const Record = require('../models/Record');
 
-// Temporary: For now, we'll skip file uploads and just store data
-// In production, use cloud storage like S3/Cloudinary
-router.post('/', express.json(), async (req, res) => {
+// Configure multer for memory storage (since we'll upload to Vercel Blob)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+router.post('/', upload.single('selfie'), async (req, res) => {
   try {
     console.log('Request body:', req.body);
+    console.log('File:', req.file);
+    
     const { location, browserInfo } = req.body;
     
     // Validate required fields
@@ -14,13 +20,25 @@ router.post('/', express.json(), async (req, res) => {
       return res.status(400).json({ message: 'Location is required with latitude and longitude' });
     }
     
+    let selfieUrl = 'placeholder.jpg';
+    
+    // Upload image to Vercel Blob if file exists
+    if (req.file) {
+      const filename = `selfie-${Date.now()}.png`;
+      const blob = await put(filename, req.file.buffer, {
+        access: 'public',
+      });
+      selfieUrl = blob.url;
+      console.log('Uploaded blob:', blob);
+    }
+    
     const record = new Record({
-      selfie: 'placeholder.jpg', // Temporary placeholder
+      selfie: selfieUrl,
       location: {
-        latitude: Number(location.latitude),
-        longitude: Number(location.longitude)
+        latitude: Number(JSON.parse(location).latitude),
+        longitude: Number(JSON.parse(location).longitude)
       },
-      browserInfo: browserInfo
+      browserInfo: JSON.parse(browserInfo)
     });
     
     console.log('Saving record:', record);
