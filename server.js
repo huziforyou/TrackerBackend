@@ -13,6 +13,10 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Tracker backend is running!' });
+});
+
 app.use('/api/records', recordsRouter);
 
 console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
