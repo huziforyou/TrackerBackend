@@ -1,53 +1,27 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const { put } = require('@vercel/blob');
 const Record = require('../models/Record');
 
-// Configure multer for memory storage (since we'll upload to Vercel Blob)
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-router.post('/', upload.single('selfie'), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     console.log('Request body:', req.body);
-    console.log('File:', req.file);
     
-    const { location, browserInfo } = req.body;
-    
-    let parsedLocation, parsedBrowserInfo;
-    
-    try {
-      parsedLocation = JSON.parse(location);
-      parsedBrowserInfo = JSON.parse(browserInfo);
-    } catch (parseError) {
-      return res.status(400).json({ message: 'Invalid JSON in request body' });
-    }
+    const { location, browserInfo, selfie } = req.body;
     
     // Validate required fields
-    if (!parsedLocation || !parsedLocation.latitude || !parsedLocation.longitude) {
+    if (!location || !location.latitude || !location.longitude) {
       return res.status(400).json({ message: 'Location is required with latitude and longitude' });
     }
     
-    let selfieUrl = 'placeholder.jpg';
-    
-    // Upload image to Vercel Blob if file exists
-    if (req.file) {
-      const filename = `selfie-${Date.now()}.png`;
-      const blob = await put(filename, req.file.buffer, {
-        access: 'public',
-      });
-      selfieUrl = blob.url;
-      console.log('Uploaded blob:', blob);
-    }
+    const selfieValue = selfie || 'placeholder.jpg';
     
     const record = new Record({
-      selfie: selfieUrl,
+      selfie: selfieValue,
       location: {
-        latitude: Number(parsedLocation.latitude),
-        longitude: Number(parsedLocation.longitude)
+        latitude: Number(location.latitude),
+        longitude: Number(location.longitude)
       },
-      browserInfo: parsedBrowserInfo
+      browserInfo: browserInfo
     });
     
     console.log('Saving record:', record);
