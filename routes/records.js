@@ -15,8 +15,17 @@ router.post('/', upload.single('selfie'), async (req, res) => {
     
     const { location, browserInfo } = req.body;
     
+    let parsedLocation, parsedBrowserInfo;
+    
+    try {
+      parsedLocation = JSON.parse(location);
+      parsedBrowserInfo = JSON.parse(browserInfo);
+    } catch (parseError) {
+      return res.status(400).json({ message: 'Invalid JSON in request body' });
+    }
+    
     // Validate required fields
-    if (!location || !location.latitude || !location.longitude) {
+    if (!parsedLocation || !parsedLocation.latitude || !parsedLocation.longitude) {
       return res.status(400).json({ message: 'Location is required with latitude and longitude' });
     }
     
@@ -35,10 +44,10 @@ router.post('/', upload.single('selfie'), async (req, res) => {
     const record = new Record({
       selfie: selfieUrl,
       location: {
-        latitude: Number(JSON.parse(location).latitude),
-        longitude: Number(JSON.parse(location).longitude)
+        latitude: Number(parsedLocation.latitude),
+        longitude: Number(parsedLocation.longitude)
       },
-      browserInfo: JSON.parse(browserInfo)
+      browserInfo: parsedBrowserInfo
     });
     
     console.log('Saving record:', record);
