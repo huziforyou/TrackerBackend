@@ -49,4 +49,37 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Delete a single record
+router.delete('/:id', async (req, res) => {
+  try {
+    console.log('Deleting record:', req.params.id);
+    const record = await Record.findByIdAndDelete(req.params.id);
+    if (!record) {
+      return res.status(404).json({ message: 'Record not found' });
+    }
+    res.status(200).json({ message: 'Record deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting record:', error);
+    res.status(500).json({ 
+      message: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Delete all records
+router.delete('/', async (req, res) => {
+  try {
+    console.log('Deleting all records...');
+    const result = await Record.deleteMany({});
+    res.status(200).json({ message: `Deleted ${result.deletedCount} records` });
+  } catch (error) {
+    console.error('Error deleting all records:', error);
+    res.status(500).json({ 
+      message: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 module.exports = router;
