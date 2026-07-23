@@ -20,35 +20,13 @@ app.get('/', (req, res) => {
 
 app.use('/api/records', recordsRouter);
 
-// Keep global connection for serverless
-let cachedDb = null;
-
-async function connectToDatabase() {
-  if (cachedDb) {
-    return cachedDb;
-  }
-
-  console.log('Connecting to MongoDB...');
-  const db = await mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 30000,
-    socketTimeoutMS: 45000
+console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ Connected to MongoDB successfully'))
+  .catch(err => {
+    console.error('❌ Could not connect to MongoDB:', err);
+    console.error('Error details:', err.message);
   });
-
-  cachedDb = db;
-  console.log('✅ Connected to MongoDB');
-  return db;
-}
-
-// Middleware to ensure DB is connected before handling requests
-app.use(async (req, res, next) => {
-  try {
-    await connectToDatabase();
-    next();
-  } catch (error) {
-    console.error('DB connection error:', error);
-    return res.status(500).json({ message: 'Database connection failed' });
-  }
-});
 
 const PORT = process.env.PORT || 5000;
 
